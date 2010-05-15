@@ -90,6 +90,7 @@ AC_CONFIG_FILES([Makefile
 		 man/Makefile
 		 sbin/Makefile
 		 sbin/cleanerd/Makefile
+		 sbin/fsck/Makefile
 		 sbin/mkfs/Makefile
 		 sbin/mount/Makefile
 		 sbin/nilfs-tune/Makefile])
