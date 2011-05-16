@@ -311,6 +311,9 @@ int nilfs_set_alloc_range(struct nilfs *nilfs, off_t start, off_t end);
 ssize_t nilfs_compare_checkpoints(struct nilfs *nilfs, nilfs_cno_t cno1,
 				  nilfs_cno_t cno2, int mode, ino_t start,
 				  void *base, size_t nmembs, size_t size);
+ssize_t nilfs_ino_lookup(struct nilfs *nilfs, nilfs_cno_t cno, ino_t ino,
+			 int index, void *buf, size_t bufsz, size_t nmembs,
+			 size_t *namesz);
 
 static inline __u64 nilfs_get_nsegments(const struct nilfs *nilfs)
 {
