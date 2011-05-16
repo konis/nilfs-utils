@@ -92,7 +92,7 @@ const static struct option long_option[] = {
 static char *progname;
 static int show_version_only = 0;
 static int verbose = 0;
-static int show_ino = 1;
+static int show_ino = 0;
 static int show_stat = 0;
 static int brief = 0;
 
@@ -102,9 +102,10 @@ static unsigned long nmodified = 0;
 
 #define NILFS_DIFF_BUFSIZE	128
 #define NILFS_DIFF_NCHANGES	512
+#define NILFS_DIFF_PATHBUFSZ	4096
 
 static struct nilfs_inode_change changes[NILFS_DIFF_NCHANGES];
-
+static char pathnambuf[2][NILFS_DIFF_PATHBUFSZ];
 
 static void myprintf(const char *fmt, ...)
 {
@@ -122,6 +123,60 @@ static void nilfs_diff_comparison_error(int err)
 	if (err == ENOTTY) {
 		myprintf(_("       This kernel does not support diff API.\n"));
 	}
+}
+
+static void nilfs_diff_inolookup_error(int err)
+{
+	myprintf(_("Error: failed to lookup inode pathname: %s\n"),
+		 strerror(err));
+	if (err == ENOTTY) {
+		myprintf(_("       This kernel does not support ino-lookup "
+			   "API.\n"));
+	}
+}
+
+static int nilfs_diff_get_pathnames(struct nilfs *nilfs,
+				    nilfs_cno_t cno1, nilfs_cno_t cno2,
+				    const struct nilfs_inode_change *ic)
+{
+	size_t namesz;
+	int ret;
+
+	pathnambuf[0][0] = '\0';
+	pathnambuf[1][0] = '\0';
+
+	if ((ic->ic_flags & NILFS_IC_DELETE) ||
+	    !(ic->ic_flags & NILFS_IC_CREATE)) {
+		ret = nilfs_ino_lookup(nilfs, cno1, ic->ic_ino, 0,
+				       pathnambuf[0], NILFS_DIFF_PATHBUFSZ, 1,
+				       &namesz);
+		if (ret < 0) {
+			if (errno != ENOENT) {
+				nilfs_diff_inolookup_error(errno);
+				return -1;
+			}
+			snprintf(pathnambuf[0], NILFS_DIFF_PATHBUFSZ,
+				 _("[inode %llu]"),
+				 (unsigned long long)ic->ic_ino);
+		}
+	}
+
+	if ((ic->ic_flags & NILFS_IC_CREATE) ||
+	    !(ic->ic_flags & NILFS_IC_DELETE)) {
+		ret = nilfs_ino_lookup(nilfs, cno2, ic->ic_ino, 0,
+				       pathnambuf[1], NILFS_DIFF_PATHBUFSZ, 1,
+				       &namesz);
+		if (ret < 0) {
+			if (errno != ENOENT) {
+				nilfs_diff_inolookup_error(errno);
+				return -1;
+			}
+			snprintf(pathnambuf[1], NILFS_DIFF_PATHBUFSZ,
+				 _("[inode %llu]"),
+				 (unsigned long long)ic->ic_ino);
+		}
+	}
+	return 0;
 }
 
 static void nilfs_count_ino_diff(struct nilfs_inode_change *ic)
@@ -145,6 +200,22 @@ static void nilfs_print_ino_diff(struct nilfs_inode_change *ic)
 	if (!(ic->ic_flags & (NILFS_IC_CREATE | NILFS_IC_DELETE))) {
 		if (ic->ic_flags || ic->ic_attr)
 			printf(_("M %llu\n"), (unsigned long long)ic->ic_ino);
+	}
+}
+
+static void nilfs_print_ino_diff_with_path(struct nilfs_inode_change *ic)
+{
+	if (ic->ic_flags & NILFS_IC_CREATE)
+		printf(_("+ %s\n"), pathnambuf[1]);
+	if (ic->ic_flags & NILFS_IC_DELETE)
+		printf(_("- %s\n"), pathnambuf[0]);
+	if (!(ic->ic_flags & (NILFS_IC_CREATE | NILFS_IC_DELETE))) {
+		if (strcmp(pathnambuf[0], pathnambuf[1]) != 0) {
+			printf(_("R %s -> %s\n"),
+			       pathnambuf[0], pathnambuf[1]);
+		} else if (ic->ic_flags || ic->ic_attr) {
+			printf(_("M %s\n"), pathnambuf[0]);
+		}
 	}
 }
 
@@ -187,6 +258,12 @@ static int nilfs_do_diff(struct nilfs *nilfs, const char *device,
 				       (unsigned long long)cno2);
 				status = EXIT_SUCCESS;
 				goto out;
+			} else if (!show_ino) {
+				if (nilfs_diff_get_pathnames(
+					    nilfs, cno1, cno2, ic) < 0)
+					goto out;
+
+				nilfs_print_ino_diff_with_path(ic);
 			} else {
 				nilfs_print_ino_diff(ic);
 			}
