@@ -62,7 +62,7 @@
  * @i_bmap: block mapping
  * @i_xattr: extended attributes
  * @i_generation: file generation (for NFS)
- * @i_pad:	padding
+ * @i_parent_ino: parent inode number (for test)
  */
 struct nilfs_inode {
 	__le64	i_blocks;
@@ -80,7 +80,7 @@ struct nilfs_inode {
 #define i_device_code	i_bmap[0]
 	__le64	i_xattr;
 	__le32	i_generation;
-	__le32	i_pad;
+	__le32	i_parent_ino;
 };
 
 /**
@@ -220,9 +220,11 @@ struct nilfs_super_block {
  * doesn't know about, it should refuse to mount the filesystem.
  */
 #define NILFS_FEATURE_COMPAT_RO_BLOCK_COUNT	0x00000001ULL
+#define NILFS_FEATURE_COMPAT_RO_PARENT_INO	0x00000002ULL
 
 #define NILFS_FEATURE_COMPAT_SUPP	0ULL
-#define NILFS_FEATURE_COMPAT_RO_SUPP	NILFS_FEATURE_COMPAT_RO_BLOCK_COUNT
+#define NILFS_FEATURE_COMPAT_RO_SUPP	(NILFS_FEATURE_COMPAT_RO_BLOCK_COUNT \
+					 | NILFS_FEATURE_COMPAT_RO_PARENT_INO)
 #define NILFS_FEATURE_INCOMPAT_SUPP	0ULL
 
 /*
