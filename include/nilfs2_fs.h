@@ -846,6 +846,8 @@ struct nilfs_bdesc {
 	_IOWR(NILFS_IOCTL_IDENT, 0x87, struct nilfs_argv)
 #define NILFS_IOCTL_CLEAN_SEGMENTS  \
 	_IOW(NILFS_IOCTL_IDENT, 0x88, struct nilfs_argv[5])
+#define NILFS_IOCTL_REVERT  \
+	_IOW(NILFS_IOCTL_IDENT, 0x89, __u32)
 #define NILFS_IOCTL_SYNC  \
 	_IOR(NILFS_IOCTL_IDENT, 0x8A, __u64)
 #define NILFS_IOCTL_RESIZE  \
