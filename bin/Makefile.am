@@ -4,7 +4,7 @@ AM_CFLAGS = -Wall
 AM_CPPFLAGS = -I$(top_srcdir)/include
 LDADD = $(top_builddir)/lib/libnilfs.la
 
-bin_PROGRAMS = chcp dumpseg lscp lssu mkcp rmcp
+bin_PROGRAMS = chcp dumpseg lscp lssu mkcp rmcp nilfs-revert
 
 chcp_SOURCES = chcp.c
 chcp_LDADD = $(LDADD) $(LIB_POSIX_SEM) $(top_builddir)/lib/libcno.la
@@ -20,3 +20,5 @@ mkcp_LDADD = $(LDADD) $(LIB_POSIX_SEM)
 
 rmcp_SOURCES = rmcp.c
 rmcp_LDADD = $(LDADD) $(top_builddir)/lib/libcno.la
+
+nilfs_revert_SOURCES = nilfs-revert.c
