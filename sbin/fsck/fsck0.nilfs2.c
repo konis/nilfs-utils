@@ -174,8 +174,8 @@ static void read_block(int fd, __u64 blocknr, void *buf,
 {
 	if (lseek64(fd, blocknr * blocksize, SEEK_SET) < 0 ||
 	    read(fd, buf, size) < size)
-		die("cannot read block (blocknr = %llu)",
-		    (unsigned long long)blocknr);
+		die("cannot read block (blocknr = %llu): %s",
+		    (unsigned long long)blocknr, strerror(errno));
 }
 
 static inline __u64 segment_start_blocknr(unsigned long segnum)
