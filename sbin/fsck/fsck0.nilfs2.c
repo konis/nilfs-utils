@@ -172,7 +172,7 @@ static void init_block_buffer(void)
 static void read_block(int fd, __u64 blocknr, void *buf,
 		       unsigned long size)
 {
-	if (lseek64(fd, blocknr * blocksize, SEEK_SET) < 0 ||
+	if (lseek(fd, blocknr * blocksize, SEEK_SET) < 0 ||
 	    read(fd, buf, size) < size)
 		die("cannot read block (blocknr = %llu): %s",
 		    (unsigned long long)blocknr, strerror(errno));
@@ -846,7 +846,7 @@ static struct nilfs_super_block *nilfs_read_super_block(int fd)
 	if (ioctl(fd, BLKGETSIZE64, &devsize) != 0)
 		goto failed;
 
-	if (lseek64(fd, NILFS_SB_OFFSET_BYTES, SEEK_SET) < 0 ||
+	if (lseek(fd, NILFS_SB_OFFSET_BYTES, SEEK_SET) < 0 ||
 	    read(fd, sbp[0], NILFS_MAX_SB_SIZE) < 0 ||
 	    !nilfs_sb_is_valid(sbp[0], 0)) {
 		free(sbp[0]);
@@ -854,7 +854,7 @@ static struct nilfs_super_block *nilfs_read_super_block(int fd)
 	}
 
 	sb2_offset = NILFS_SB2_OFFSET_BYTES(devsize);
-	if (lseek64(fd, sb2_offset, SEEK_SET) < 0 ||
+	if (lseek(fd, sb2_offset, SEEK_SET) < 0 ||
 	    read(fd, sbp[1], NILFS_MAX_SB_SIZE) < 0 ||
 	    !nilfs_sb_is_valid(sbp[1], 0))
 		goto sb2_failed;
@@ -952,7 +952,7 @@ static int nilfs_write_super_block(int fd, struct nilfs_super_block *sbp)
 	if (ioctl(fd, BLKGETSIZE64, &devsize) != 0)
 		return -1;
 
-	if (lseek64(fd, NILFS_SB_OFFSET_BYTES, SEEK_SET) < 0 ||
+	if (lseek(fd, NILFS_SB_OFFSET_BYTES, SEEK_SET) < 0 ||
 	    write(fd, sbp, sb_bytes) < sb_bytes ||
 	    fsync(fd) < 0)
 		fprintf(stderr, "failed to write primary super block");
@@ -963,7 +963,7 @@ static int nilfs_write_super_block(int fd, struct nilfs_super_block *sbp)
 	if (sb2_offset < (__u64)nsegments * blocks_per_segment * blocksize)
 		return ret;
 
-	if (lseek64(fd, sb2_offset, SEEK_SET) < 0 ||
+	if (lseek(fd, sb2_offset, SEEK_SET) < 0 ||
 	    write(fd, sbp, sb_bytes) <  sb_bytes ||
 	    fsync(fd) < 0)
 		fprintf(stderr,
