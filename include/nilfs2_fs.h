@@ -923,6 +923,17 @@ struct nilfs_comp_args {
 	struct nilfs_argv argv;
 };
 
+/**
+ * struct nilfs_ino_lookup_args - ioctl argument to lookup inode pathname
+ * @ino: inode number
+ * @cno: checkpoint number
+ * @argv: argument vector to exchange pathnames
+ */
+struct nilfs_ino_lookup_args {
+	__u64 ino;
+	__u64 cno;
+	struct nilfs_argv argv;
+};
 
 #define NILFS_IOCTL_IDENT		'n'
 
@@ -954,5 +965,7 @@ struct nilfs_comp_args {
 	_IOW(NILFS_IOCTL_IDENT, 0x8D, struct nilfs_argv)
 #define NILFS_IOCTL_COMPARE_CHECKPOINTS  \
 	_IOWR(NILFS_IOCTL_IDENT, 0x8E, struct nilfs_comp_args)
+#define NILFS_IOCTL_INO_LOOKUP  \
+	_IOWR(NILFS_IOCTL_IDENT, 0x8F, struct nilfs_ino_lookup_args)
 
 #endif	/* _LINUX_NILFS_FS_H */

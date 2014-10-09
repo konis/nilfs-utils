@@ -823,6 +823,44 @@ ssize_t nilfs_compare_checkpoints(struct nilfs *nilfs, nilfs_cno_t cno1,
 	ret = ioctl(nilfs->n_iocfd, NILFS_IOCTL_COMPARE_CHECKPOINTS, &cmpargs);
 	return ret < 0 ? ret : cmpargs.argv.v_nmembs;
 }
+
+/**
+ * nilfs_ino_lookup - lookup pathname of inode
+ * @nilfs: nilfs object
+ * @cno: checkpoint number
+ * @ino: inode number
+ * @index: index of parent inode
+ * @buf: pathname buffer
+ * @bufsz: buffer size
+ * @nmembs: maximum number of pathnames to be stored
+ * @namesz: buffer to store total size of pathnames
+ */
+ssize_t nilfs_ino_lookup(struct nilfs *nilfs, nilfs_cno_t cno, ino_t ino,
+			 int index, void *buf, size_t bufsz, size_t nmembs,
+			 size_t *namesz)
+{
+	struct nilfs_ino_lookup_args largs;
+	ssize_t ret;
+
+	if (nilfs->n_iocfd < 0) {
+		errno = EBADF;
+		return -1;
+	}
+	largs.cno = cno;
+	largs.ino = ino;
+	largs.argv.v_base = (unsigned long)buf;
+	largs.argv.v_nmembs = nmembs;
+	largs.argv.v_size = bufsz;
+	largs.argv.v_flags = 0;
+	largs.argv.v_index = index;
+
+	ret = ioctl(nilfs->n_iocfd, NILFS_IOCTL_INO_LOOKUP, &largs);
+	if (ret >= 0) {
+		ret = largs.argv.v_nmembs;
+		*namesz = largs.argv.v_size;
+	}
+	return ret;
+}
 /* raw */
 
 /**
