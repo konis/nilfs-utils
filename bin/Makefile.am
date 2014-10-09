@@ -4,7 +4,7 @@ AM_CFLAGS = -Wall
 AM_CPPFLAGS = -I$(top_srcdir)/include
 LDADD = $(top_builddir)/lib/libnilfs.la
 
-bin_PROGRAMS = chcp dumpseg lscp lssu mkcp rmcp
+bin_PROGRAMS = chcp dumpseg lscp lssu mkcp rmcp nilfs-diff
 
 chcp_SOURCES = chcp.c
 chcp_LDADD = $(LDADD) $(LIB_POSIX_SEM) $(top_builddir)/lib/libparser.la
@@ -22,5 +22,8 @@ mkcp_LDADD = $(LDADD) $(LIB_POSIX_SEM)
 
 rmcp_SOURCES = rmcp.c
 rmcp_LDADD = $(LDADD) $(top_builddir)/lib/libparser.la
+
+nilfs_diff_SOURCES = nilfs-diff.c
+nilfs_diff_LDADD = $(LDADD) $(top_builddir)/lib/libparser.la
 
 EXTRA_DIST = .gitignore
