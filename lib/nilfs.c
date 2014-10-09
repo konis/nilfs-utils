@@ -792,6 +792,37 @@ int nilfs_set_alloc_range(struct nilfs *nilfs, off_t start, off_t end)
 	return ioctl(nilfs->n_iocfd, NILFS_IOCTL_SET_ALLOC_RANGE, range);
 }
 
+/**
+ * nilfs_compare_checkpoints - compare_two_checkpoints
+ * @nilfs: nilfs object
+ * @cno1: source checkpoint number
+ * @cno2: target checkpoint number
+ * @mode: comparison mode
+ * @ic: array of nilfs_inode_change structs
+ * @nmembs: size of @ic array (number of items)
+ */
+ssize_t nilfs_compare_checkpoints(struct nilfs *nilfs, nilfs_cno_t cno1,
+				  nilfs_cno_t cno2, int mode, ino_t start,
+				  struct nilfs_inode_change *ic, size_t nmembs)
+{
+	struct nilfs_comp_args cmpargs;
+	int ret;
+
+	if (nilfs->n_iocfd < 0) {
+		errno = EBADF;
+		return -1;
+	}
+	cmpargs.cno1 = cno1;
+	cmpargs.cno2 = cno2;
+	cmpargs.argv.v_base = (unsigned long)ic;
+	cmpargs.argv.v_nmembs = nmembs;
+	cmpargs.argv.v_size = sizeof(struct nilfs_inode_change);
+	cmpargs.argv.v_flags = mode;
+	cmpargs.argv.v_index = start;
+
+	ret = ioctl(nilfs->n_iocfd, NILFS_IOCTL_COMPARE_CHECKPOINTS, &cmpargs);
+	return ret < 0 ? ret : cmpargs.argv.v_nmembs;
+}
 /* raw */
 
 /**

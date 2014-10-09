@@ -883,6 +883,47 @@ struct nilfs_bdesc {
 	__u32 bd_pad;
 };
 
+
+/**
+ * struct nilfs_inode_change - information on how inode was changed
+ * @ic_ino: inode number
+ * @ic_flags: flags of changes
+ * @ic_attr: attribute flags (ATTR_MODE, ATTR_UID, ATTR_SIZE, ...)
+ */
+struct nilfs_inode_change {
+	__u64 ic_ino;
+	__u32 ic_flags;
+	__u32 ic_attr;
+};
+
+#define NILFS_IC_CREATE		(1 << 0)  /* Inode was.. created */
+#define NILFS_IC_DELETE		(1 << 1)  /*             deleted */
+
+#define NILFS_IC_LINKCOUNT	(1 << 8)  /* Link count */
+#define NILFS_IC_DATA		(1 << 9)  /* Data */
+#define NILFS_IC_XATTR		(1 << 10) /* Extended attributes (reserved) */
+#define NILFS_IC_FS_FLAGS	(1 << 11) /* file attribute flags (i_flags) */
+#define NILFS_IC_GENERATION	(1 << 12) /* i_generation */
+
+/* mode value of checkpoints comparison (for argv->v_flags) */
+enum {
+	NILFS_COMPARE_INODES,      /* look up changed inodes */
+	NILFS_COMPARE_FILE_EXTENT, /* look up changed data extent (reserved) */
+};
+
+/**
+ * struct nilfs_comp_args - arguments to compare items between two checkpoints
+ * @cno1: source checkpoint number
+ * @cno2: target checkpoint number
+ * @argv: argument vector to exchange items changed between two checkpoints
+ */
+struct nilfs_comp_args {
+	__u64 cno1;
+	__u64 cno2;
+	struct nilfs_argv argv;
+};
+
+
 #define NILFS_IOCTL_IDENT		'n'
 
 #define NILFS_IOCTL_CHANGE_CPMODE  \
@@ -911,5 +952,7 @@ struct nilfs_bdesc {
 	_IOW(NILFS_IOCTL_IDENT, 0x8C, __u64[2])
 #define NILFS_IOCTL_SET_SUINFO  \
 	_IOW(NILFS_IOCTL_IDENT, 0x8D, struct nilfs_argv)
+#define NILFS_IOCTL_COMPARE_CHECKPOINTS  \
+	_IOWR(NILFS_IOCTL_IDENT, 0x8E, struct nilfs_comp_args)
 
 #endif	/* _LINUX_NILFS_FS_H */

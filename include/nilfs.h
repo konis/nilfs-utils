@@ -315,6 +315,9 @@ int nilfs_clean_segments(struct nilfs *, struct nilfs_vdesc *, size_t,
 int nilfs_sync(const struct nilfs *, nilfs_cno_t *);
 int nilfs_resize(struct nilfs *nilfs, off_t size);
 int nilfs_set_alloc_range(struct nilfs *nilfs, off_t start, off_t end);
+ssize_t nilfs_compare_checkpoints(struct nilfs *nilfs, nilfs_cno_t cno1,
+				  nilfs_cno_t cno2, int mode, ino_t start,
+				  struct nilfs_inode_change *ic, size_t nmembs);
 
 static inline __u64 nilfs_get_nsegments(const struct nilfs *nilfs)
 {
