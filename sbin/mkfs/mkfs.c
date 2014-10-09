@@ -1058,7 +1058,8 @@ static const __u64 ok_features[NILFS_MAX_FEATURE_TYPES] = {
 	/* Compat */
 	0,
 	/* Read-only compat */
-	NILFS_FEATURE_COMPAT_RO_BLOCK_COUNT,
+	NILFS_FEATURE_COMPAT_RO_BLOCK_COUNT |
+	NILFS_FEATURE_COMPAT_RO_PARENT_INO,
 	/* Incompat */
 	0
 };
@@ -1234,7 +1235,8 @@ static void init_nilfs(struct nilfs_disk_info *di)
 static void reserve_ifile_inode(ino_t ino);
 static blocknr_t assign_vblocknr(blocknr_t blocknr);
 
-static void init_inode(ino_t ino, unsigned type, int mode, unsigned size)
+static void init_inode(ino_t ino, unsigned type, int mode, unsigned size,
+		       ino_t parent_ino)
 {
 	struct nilfs_inode *raw_inode = nilfs.files[ino]->raw_inode;
 
@@ -1245,6 +1247,11 @@ static void init_inode(ino_t ino, unsigned type, int mode, unsigned size)
 	raw_inode->i_links_count =	cpu_to_le16(1);
 	raw_inode->i_ctime =		cpu_to_le64(nilfs.diskinfo->ctime);
 	raw_inode->i_mtime =		cpu_to_le64(nilfs.diskinfo->ctime);
+
+	if (compat_array[NILFS_FEATURE_TYPE_COMPAT_RO] &
+	    NILFS_FEATURE_COMPAT_RO_PARENT_INO) {
+		raw_inode->i_parent_ino = cpu_to_le32(parent_ino);
+	}
 
 	if (ino >= NILFS_USER_INO)
 		reserve_ifile_inode(ino);
@@ -1272,7 +1279,7 @@ static void nilfs_mkfs_make_rootdir(void)
 		   substitution to de->inode on a certain environment. */
 	unsigned rec_len, rec_end;
 
-	init_inode(NILFS_ROOT_INO, DT_DIR, 0755, blocksize);
+	init_inode(NILFS_ROOT_INO, DT_DIR, 0755, blocksize, NILFS_ROOT_INO);
 
 	de->inode = cpu_to_le64(NILFS_ROOT_INO);
 	de->name_len = 1;
@@ -1301,16 +1308,16 @@ static void nilfs_mkfs_make_rootdir(void)
 
 static void nilfs_mkfs_make_dot_nilfs(void)
 {
-	init_inode(NILFS_NILFS_INO, DT_REG, 0644, 0);
+	init_inode(NILFS_NILFS_INO, DT_REG, 0644, 0, NILFS_ROOT_INO);
 }
 
 static void nilfs_mkfs_make_reserved_files(void)
 {
-	init_inode(NILFS_ATIME_INO, DT_REG, 0, 0);
-	init_inode(1, DT_REG, 0, 0);
-	init_inode(8, DT_REG, 0, 0);
-	init_inode(9, DT_REG, 0, 0);
-	init_inode(10, DT_REG, 0, 0);
+	init_inode(NILFS_ATIME_INO, DT_REG, 0, 0, 0);
+	init_inode(1, DT_REG, 0, 0, 0);
+	init_inode(8, DT_REG, 0, 0, 0);
+	init_inode(9, DT_REG, 0, 0, 0);
+	init_inode(10, DT_REG, 0, 0, 0);
 }
 
 static void *
@@ -1427,7 +1434,7 @@ static void prepare_ifile(void)
 	for (ino = 0; ino < NILFS_USER_INO; ino++)
 		alloc_blockgrouped_file_entry(blocknr, ino);
 
-	init_inode(NILFS_IFILE_INO, DT_REG, 0, 0);
+	init_inode(NILFS_IFILE_INO, DT_REG, 0, 0, 0);
 }
 
 static void reserve_ifile_inode(ino_t ino)
@@ -1484,7 +1491,7 @@ static void prepare_cpfile(void)
 			}
 		}
 	}
-	init_inode(NILFS_CPFILE_INO, DT_REG, 0, 0);
+	init_inode(NILFS_CPFILE_INO, DT_REG, 0, 0, 0);
 }
 
 static void commit_cpfile(void)
@@ -1532,7 +1539,7 @@ static void prepare_sufile(void)
 				nilfs_segment_usage_set_clean(su);
 		}
 	}
-	init_inode(NILFS_SUFILE_INO, DT_REG, 0, 0);
+	init_inode(NILFS_SUFILE_INO, DT_REG, 0, 0, 0);
 }
 
 static void commit_sufile(void)
@@ -1578,7 +1585,7 @@ static void prepare_dat(void)
 	}
 	/* reserve the dat entry of vblocknr=0 */
 	alloc_blockgrouped_file_entry(blocknr, 0);
-	init_inode(NILFS_DAT_INO, DT_REG, 0, 0);
+	init_inode(NILFS_DAT_INO, DT_REG, 0, 0, 0);
 }
 
 static blocknr_t assign_vblocknr(blocknr_t blocknr)
