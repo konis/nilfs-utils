@@ -135,5 +135,21 @@
 #error "unknown endian"
 #endif	/* __BYTE_ORDER */
 
+#if !HAVE_POSIX_MADVISE
+#define posix_madvise(addr, len, advice)	(0)
+#endif	/* !HAVE_POSIX_MADVISE */
+
+#if !HAVE_SYS_MMAN_H
+#if HAVE_POSIX_MADVISE
+extern int posix_madvise(void *addr, size_t len, int advice);
+#endif
+#ifndef POSIX_MADV_NORMAL
+#define POSIX_MADV_NORMAL	0
+#define POSIX_MADV_RANDOM	1
+#define POSIX_MADV_SEQUENTIAL	2
+#define POSIX_MADV_WILLNEED	3
+#define POSIX_MADV_DONTNEED	4
+#endif	/* POSIX_MADV_* */
+#endif	/* !HAVE_SYS_MMAN_H */
 
 #endif /* __COMPAT_H__ */

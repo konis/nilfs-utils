@@ -90,8 +90,8 @@ AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([ctype.h err.h fcntl.h grp.h libintl.h limits.h \
 		  linux/magic.h linux/types.h locale.h mntent.h mqueue.h \
 		  paths.h poll.h pwd.h semaphore.h stdint.h stdlib.h string.h \
-		  strings.h sys/ioctl.h sys/mount.h sys/time.h syslog.h \
-		  time.h unistd.h])
+		  strings.h sys/ioctl.h sys/mman.h sys/mount.h sys/time.h \
+		  syslog.h time.h unistd.h])
 
 # Check /etc/mtab
 mtab_type=''
@@ -170,9 +170,9 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNC(posix_memalign,,
 	      [AC_MSG_ERROR([cannot find posix_memalign() function])])
 AC_CHECK_FUNCS([alarm atexit ftruncate getcwd getgrgid getmntent_r getpwuid \
-		gettimeofday localtime_r memmove memset pread strcasecmp \
-		strchr strdup strerror strrchr strstr strtok_r strtoul \
-		strtoull])
+		gettimeofday localtime_r memmove memset posix_madvise pread \
+		strcasecmp strchr strdup strerror strrchr strstr strtok_r \
+		strtoul strtoull])
 
 # Checks for system services
 AC_SYS_LARGEFILE
