@@ -13,12 +13,25 @@
 #include <stdlib.h>
 #endif	/* HAVE_STDLIB_H */
 
+#if HAVE_STDINT_H
+#include <stdint.h>	/* uintptr_t */
+#endif	/* HAVE_STDINT_H */
+
+#if HAVE_UNISTD_H
+#include <unistd.h>	/* sysconf */
+#endif	/* HAVE_UNISTD_H */
+
 #if HAVE_LINUX_TYPES_H
 #include <linux/types.h>
 #endif	/* HAVE_LINUX_TYPES_H */
 
+#if HAVE_SYS_MMAN_H
+#include <sys/mman.h>	/* posix_madvise */
+#endif	/* HAVE_SYS_MMAN_H */
+
 #include <errno.h>
 #include "nilfs.h"
+#include "compat.h"
 #include "segment.h"
 #include "util.h"
 #include "crc32.h"
@@ -45,6 +58,29 @@ static int nilfs_psegment_is_valid(struct nilfs_psegment *pseg)
 	if (sumbytes < offset || (void *)pseg->segsum + sumbytes >= limit)
 		return 0;
 
+	if (pseg->segment->mmapped) {
+		long pagesize = sysconf(_SC_PAGESIZE);
+		__u64 psegsize;
+		void *nextsumaddr;
+		__u32 pageoffset;
+
+		if (unlikely(pagesize <= 0))
+			goto skip_ra;
+
+		psegsize = le32_to_cpu(pseg->segsum->ss_nblocks) <<
+			pseg->blkbits;
+		nextsumaddr = (void *)pseg->segsum + psegsize;
+		if (nextsumaddr + (NILFS_PSEG_MIN_BLOCKS << pseg->blkbits) >=
+		    limit)
+			goto skip_ra;
+
+		pageoffset = (uintptr_t)nextsumaddr % pagesize;
+		posix_madvise(nextsumaddr - pageoffset,
+			      pageoffset + (1UL << pseg->blkbits),
+			      POSIX_MADV_WILLNEED);
+	}
+
+skip_ra:
 	if (le32_to_cpu(pseg->segsum->ss_sumsum) !=
 	    crc32_le(pseg->segment->seed,
 		     (unsigned char *)pseg->segsum + offset,
