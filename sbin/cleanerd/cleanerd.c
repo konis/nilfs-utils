@@ -506,11 +506,11 @@ static void
 nilfs_cleanerd_reduce_ncleansegs_for_retry(struct nilfs_cleanerd *cleanerd)
 {
 	if (cleanerd->running == 2) {
-		if (cleanerd->ncleansegs > 1)
-			cleanerd->ncleansegs >>= 1;
-	} else  {
 		if (cleanerd->mm_ncleansegs > 1)
 			cleanerd->mm_ncleansegs >>= 1;
+	} else  {
+		if (cleanerd->ncleansegs > 1)
+			cleanerd->ncleansegs >>= 1;
 	}
 }
 
